@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - OIDC Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .login-button {
+            display: inline-block;
+            width: 100%;
+            padding: 15px 30px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .google-button {
+            background: #4285f4;
+            color: white;
+        }
+
+        .google-button:hover {
+            background: #357ae8;
+        }
+
+        .github-button {
+            background: #24292e;
+            color: white;
+        }
+
+        .github-button:hover {
+            background: #1a1e22;
+        }
+
+        .kakao-button {
+            background: #FEE500;
+            color: #000000;
+        }
+
+        .kakao-button:hover {
+            background: #fdd835;
+        }
+
+        .naver-button {
+            background: #03C75A;
+            color: white;
+        }
+
+        .naver-button:hover {
+            background: #02a04a;
+        }
+
+        .button-icon {
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        .divider {
+            margin: 30px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 20px;
+            color: #999;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .features {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 20px;
+        }
+
+        .feature-text {
+            flex: 1;
+        }
+
+        .feature-title {
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .feature-desc {
+            color: #666;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <h1>Welcome Back!</h1>
+    <p class="subtitle">Sign in to access your dashboard</p>
+
+    <div class="divider">
+        <span>Choose your login method</span>
+    </div>
+
+    <a href="/oauth2/authorization/google" class="login-button google-button">
+        <span class="button-icon">🔍</span>
+        Continue with Google
+    </a>
+
+    <a href="/oauth2/authorization/github" class="login-button github-button">
+        <span class="button-icon">🐙</span>
+        Continue with GitHub
+    </a>
+
+    <a href="/oauth2/authorization/kakao" class="login-button kakao-button">
+        <span class="button-icon">💬</span>
+        Continue with Kakao
+    </a>
+
+    <a href="/oauth2/authorization/naver" class="login-button naver-button">
+        <span class="button-icon">🟢</span>
+        Continue with Naver
+    </a>
+
+    <div class="features">
+        <div class="feature-item">
+            <div class="feature-icon">🔒</div>
+            <div class="feature-text">
+                <div class="feature-title">Secure Authentication</div>
+                <div class="feature-desc">OAuth 2.0 & OpenID Connect</div>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">⚡</div>
+            <div class="feature-text">
+                <div class="feature-title">Fast & Simple</div>
+                <div class="feature-desc">One-click social login</div>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">🛡️</div>
+            <div class="feature-text">
+                <div class="feature-title">Privacy Protected</div>
+                <div class="feature-desc">Your data is safe with us</div>
+            </div>
+        </div>
+    </div>
+
+    <a href="/" class="back-link">← Back to Home</a>
+</div>
+</body>
+</html>

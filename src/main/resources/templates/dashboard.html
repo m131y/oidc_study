@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>OIDC 대시보드</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .token-display {
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .claim-table th { width: 30%; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/">OIDC Demo</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/logout">로그아웃</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- 사용자 정보 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>👤 OIDC 사용자 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <img th:src="${picture}" class="img-fluid rounded-circle"
+                                 alt="프로필 사진" style="max-width: 80px;">
+                        </div>
+                        <div class="col-md-9">
+                            <h6 th:text="${name}">사용자 이름</h6>
+                            <p class="text-muted mb-1" th:text="${email}">이메일</p>
+                            <p class="mb-1">
+                                <span class="badge bg-success" th:if="${emailVerified}">이메일 인증됨</span>
+                                <span class="badge bg-warning" th:unless="${emailVerified}">이메일 미인증</span>
+                            </p>
+                            <small class="text-muted">Subject: <span th:text="${subject}"></span></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OIDC 플로우 정보 -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6>🔄 OIDC 플로우 완료</h6>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li class="text-success">✓ Authorization Code 획득</li>
+                        <li class="text-success">✓ Access Token + ID Token 교환</li>
+                        <li class="text-success">✓ ID Token 검증 완료</li>
+                        <li class="text-success">✓ 사용자 신원 확인 완료</li>
+                        <li class="text-success">✓ UserInfo 엔드포인트 호출 (선택적)</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- ID Token 정보 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6>🎫 ID Token 정보</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm claim-table">
+                        <tr>
+                            <th>발급자 (iss)</th>
+                            <td th:text="${issuer}"></td>
+                        </tr>
+                        <tr>
+                            <th>대상 (aud)</th>
+                            <td class="small" th:text="${audience}"></td>
+                        </tr>
+                        <tr>
+                            <th>발급시간 (iat)</th>
+                            <td th:text="${issuedAt}"></td>
+                        </tr>
+                        <tr>
+                            <th>만료시간 (exp)</th>
+                            <td th:text="${expiresAt}"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- API 테스트 -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6>🧪 API 테스트</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary btn-sm" onclick="fetchIdTokenClaims()">
+                            ID Token 클레임 조회
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="fetchIdTokenInfo()">
+                            ID Token 상세 정보
+                        </button>
+                        <button class="btn btn-info btn-sm" onclick="fetchUserInfo()">
+                            UserInfo 엔드포인트
+                        </button>
+                    </div>
+                    <div id="apiResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ID Token 원본 -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6>🔍 ID Token 원본 (JWT)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="token-display">
+                        <small class="font-monospace" th:text="${idTokenValue}"></small>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            위 토큰을 <a href="https://jwt.io" target="_blank">jwt.io</a>에서 디코딩해보세요!
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 전체 클레임 -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6>📋 전체 클레임 정보</h6>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 small" th:text="${allClaims != null && !allClaims.isEmpty() ?
+                        allClaims : '클레임 정보가 없습니다.'}"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function fetchIdTokenClaims() {
+        try {
+            const response = await fetch('/api/id-token/claims');
+            const data = await response.json();
+            displayResult('ID Token 클레임', data);
+        } catch (error) {
+            displayResult('오류', {error: error.message});
+        }
+    }
+
+    async function fetchIdTokenInfo() {
+        try {
+            const response = await fetch('/api/id-token/info');
+            const data = await response.json();
+            displayResult('ID Token 상세 정보', data);
+        } catch (error) {
+            displayResult('오류', {error: error.message});
+        }
+    }
+
+    async function fetchUserInfo() {
+        try {
+            const response = await fetch('/api/userinfo');
+            const data = await response.json();
+            displayResult('UserInfo 엔드포인트', data);
+        } catch (error) {
+            displayResult('오류', {error: error.message});
+        }
+    }
+
+    function displayResult(title, data) {
+        document.getElementById('apiResult').innerHTML = `
+            <h6 class="mt-3">${title}</h6>
+            <pre class="bg-light p-2 small">${JSON.stringify(data, null, 2)}</pre>
+        `;
+    }
+</script>
+</body>
+</html>
